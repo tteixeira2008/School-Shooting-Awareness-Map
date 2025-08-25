@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mass School Shooting Awareness</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            overflow: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            z-index: 10;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+            margin: 0;
+            max-width: 600px;
+        }
+        
+        .map-container {
+            width: 85vw;
+            max-width: 1200px;
+            height: 65vh;
+            min-height: 500px;
+            border: 3px solid #2c3e50;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            cursor: grab;
+            background: linear-gradient(145deg, #34495e, #2c3e50);
+            box-shadow: 
+                0 20px 40px rgba(0,0,0,0.3),
+                inset 0 2px 4px rgba(255,255,255,0.1),
+                inset 0 -2px 4px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .map-container:active {
+            cursor: grabbing;
+        }
+        
+        .map-wrapper {
+            position: relative;
+            transform-origin: 0 0;
+            transition: none;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .map-image {
+            display: block;
+            user-select: none;
+            pointer-events: none;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center center;
+        }
+        
+        .crime-point {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: radial-gradient(circle, #e74c3c, #c0392b);
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            border: 3px solid #fff;
+            box-shadow: 
+                0 4px 8px rgba(0,0,0,0.4),
+                0 0 0 2px rgba(231, 76, 60, 0.3);
+            transform: translate(-50%, -50%);
+            transition: all 0.2s ease;
+        }
+        
+        .crime-point:hover {
+            background: radial-gradient(circle, #ff4757, #ff3838);
+            transform: translate(-50%, -50%) scale(1.3);
+            box-shadow: 
+                0 6px 12px rgba(0,0,0,0.5),
+                0 0 0 4px rgba(255, 71, 87, 0.4),
+                0 0 20px rgba(255, 71, 87, 0.3);
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            pointer-events: none;
+            z-index: 20;
+            white-space: nowrap;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #2c3e50;
+        }
+        
+        .info-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(145deg, #ffffff, #f8f9fa);
+            border: none;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 450px;
+            z-index: 100;
+            box-shadow: 
+                0 25px 50px rgba(0,0,0,0.25),
+                0 0 0 1px rgba(255,255,255,0.05);
+            display: none;
+            backdrop-filter: blur(20px);
+        }
+        
+        .info-box h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 15px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .info-box p {
+            color: #34495e;
+            line-height: 1.6;
+            font-size: 1rem;
+            margin: 15px 0 0 0;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(248,249,250,0.95));
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            z-index: 50;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(15px);
+            font-family: 'Segoe UI', sans-serif;
+        }
+        
+        .controls strong {
+            color: #2c3e50;
+            font-size: 14px;
+            display: block;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+        
+        .controls br + text {
+            color: #34495e;
+            line-height: 1.5;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(44,62,80,0.4));
+            z-index: 99;
+            display: none;
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Mass School Shooting Memorial Map</h1>
+        <p>Honoring the victims of major school shootings in United States history (4+ casualties). Each point represents a tragedy that has profoundly impacted our communities and nation.</p>
+    </div>
+    
+
+    
+    <div class="map-container" id="mapContainer">
+        <div class="map-wrapper" id="mapWrapper">
+            <img src="US-map.png" alt="US Map" class="map-image" id="mapImage">
+        </div>
+    </div>
+    
+    <div class="tooltip" id="tooltip"></div>
+    <div class="overlay" id="overlay"></div>
+    <div class="info-box" id="infoBox">
+        <h3 id="schoolName">School Information</h3>
+        <div id="incidentDetails">
+            <p>Loading incident details...</p>
+        </div>
+    </div>
+
+    <script>
+        // All 35 major school shootings in US history (4+ deaths)
+        const massSchoolShootings = [
+            {
+                name: "Virginia Tech",
+                x: 0.77, // Blacksburg, Virginia
+                y: 0.52,
+                details: `<strong>Date:</strong> April 16, 2007<br><strong>Location:</strong> Blacksburg, Virginia<br><strong>Casualties:</strong> 33 deceased (including shooter), 17 injured<br><br><strong>Incident:</strong> 23-year-old student Seung-Hui Cho killed thirty-two students and faculty members in two separate attacks on the Virginia Tech campus before taking his own life.`
+            },
+            {
+                name: "Sandy Hook Elementary",
+                x: 0.82, // Newtown, Connecticut
+                y: 0.35,
+                details: `<strong>Date:</strong> December 14, 2012<br><strong>Location:</strong> Newtown, Connecticut<br><strong>Casualties:</strong> 28 deceased (including shooter), 2 injured<br><br><strong>Incident:</strong> 20-year-old Adam Lanza killed twenty-six people at Sandy Hook Elementary School, including twenty first-grade children aged six and seven, and six adults.`
+            },
+            {
+                name: "Robb Elementary",
+                x: 0.35, // Uvalde, Texas
+                y: 0.82,
+                details: `<strong>Date:</strong> May 24, 2022<br><strong>Location:</strong> Uvalde, Texas<br><strong>Casualties:</strong> 22 deceased (including shooter), 18 injured<br><br><strong>Incident:</strong> 18-year-old Salvador Ramos killed 19 students between ages 9-11 and 2 teachers at Robb Elementary School before being killed by law enforcement.`
+            },
+            {
+                name: "Marjory Stoneman Douglas High",
+                x: 0.88, // Parkland, Florida
+                y: 0.85,
+                details: `<strong>Date:</strong> February 14, 2018<br><strong>Location:</strong> Parkland, Florida<br><strong>Casualties:</strong> 17 deceased, 18 injured<br><br><strong>Incident:</strong> 19-year-old former student Nikolas Cruz opened fire at Marjory Stoneman Douglas High School, killing 17 people and injuring 18 others.`
+            },
+            {
+                name: "University of Texas Tower",
+                x: 0.45, // Austin, Texas
+                y: 0.75,
+                details: `<strong>Date:</strong> August 1, 1966<br><strong>Location:</strong> Austin, Texas<br><strong>Casualties:</strong> 16 deceased (including shooter), 31 injured<br><br><strong>Incident:</strong> 25-year-old Charles Whitman fired from the UT clock tower for 96 minutes, killing 15 people and wounding 31 others before being killed by police.`
+            },
+            {
+                name: "Columbine High School",
+                x: 0.28, // Columbine, Colorado
+                y: 0.50,
+                details: `<strong>Date:</strong> April 20, 1999<br><strong>Location:</strong> Columbine, Colorado<br><strong>Casualties:</strong> 16 deceased (including both shooters), 20 injured<br><br><strong>Incident:</strong> Students Eric Harris and Dylan Klebold killed 12 students and 1 teacher before taking their own lives. The tragedy sparked nationwide discussions about school safety.`
+            },
+            {
+                name: "Enoch Brown School",
+                x: 0.75, // Greencastle, Pennsylvania
+                y: 0.48,
+                details: `<strong>Date:</strong> July 26, 1764<br><strong>Location:</strong> Greencastle, Pennsylvania<br><strong>Casualties:</strong> 11 deceased, 1 injured<br><br><strong>Incident:</strong> Four Delaware American Indians entered the schoolhouse and killed schoolmaster Enoch Brown and nine children during Pontiac's War.`
+            },
+            {
+                name: "Santa Fe High School",
+                x: 0.48, // Santa Fe, Texas
+                y: 0.80,
+                details: `<strong>Date:</strong> May 18, 2018<br><strong>Location:</strong> Santa Fe, Texas<br><strong>Casualties:</strong> 10 deceased, 14 injured<br><br><strong>Incident:</strong> 17-year-old Dimitrios Pagourtzis killed 10 people and injured 13 others at Santa Fe High School using weapons stolen from his father.`
+            },
+            {
+                name: "Red Lake Senior High",
+                x: 0.32, // Red Lake, Minnesota
+                y: 0.25,
+                details: `<strong>Date:</strong> March 21, 2005<br><strong>Location:</strong> Red Lake, Minnesota<br><strong>Casualties:</strong> 10 deceased (including shooter), 9 injured<br><br><strong>Incident:</strong> 16-year-old Jeff Weise killed his grandfather and girlfriend at home, then drove to Red Lake Senior High School where he killed 7 more people before taking his own life.`
+            },
+            {
+                name: "Umpqua Community College",
+                x: 0.05, // Roseburg, Oregon
+                y: 0.32,
+                details: `<strong>Date:</strong> October 1, 2015<br><strong>Location:</strong> Roseburg, Oregon<br><strong>Casualties:</strong> 10 deceased (including shooter), 8 injured<br><br><strong>Incident:</strong> 26-year-old Christopher Harper-Mercer opened fire on campus, killing eight students and one teacher before committing suicide.`
+            },
+            {
+                name: "UC Santa Barbara",
+                x: 0.08, // Isla Vista, California
+                y: 0.70,
+                details: `<strong>Date:</strong> May 23, 2014<br><strong>Location:</strong> Isla Vista, California<br><strong>Casualties:</strong> 7 deceased (including shooter), 14 injured<br><br><strong>Incident:</strong> 22-year-old Elliot Rodger attacked his roommates and drove around shooting at people before committing suicide.`
+            },
+            {
+                name: "West Nickel Mines School",
+                x: 0.75, // Nickel Mines, Pennsylvania
+                y: 0.50,
+                details: `<strong>Date:</strong> October 2, 2006<br><strong>Location:</strong> Nickel Mines, Pennsylvania<br><strong>Casualties:</strong> 7 deceased (including shooter), 4 injured<br><br><strong>Incident:</strong> 32-year-old Charles Roberts killed five Amish girls and wounded five others before killing himself.`
+            },
+            {
+                name: "Oikos University",
+                x: 0.05, // Oakland, California
+                y: 0.58,
+                details: `<strong>Date:</strong> April 2, 2012<br><strong>Location:</strong> Oakland, California<br><strong>Casualties:</strong> 7 deceased, 3 injured<br><br><strong>Incident:</strong> 43-year-old One L. Goh shot seven students at this Christian college before fleeing and being captured.`
+            },
+            {
+                name: "Cal State Fullerton",
+                x: 0.12, // Fullerton, California
+                y: 0.72,
+                details: `<strong>Date:</strong> July 12, 1976<br><strong>Location:</strong> Fullerton, California<br><strong>Casualties:</strong> 7 deceased, 2 injured<br><br><strong>Incident:</strong> 37-year-old custodian Edward Allaway killed seven people in the university library.`
+            },
+            {
+                name: "Covenant School",
+                x: 0.53, // Nashville, Tennessee
+                y: 0.58,
+                details: `<strong>Date:</strong> March 27, 2023<br><strong>Location:</strong> Nashville, Tennessee<br><strong>Casualties:</strong> 7 deceased (including shooter), 1 injured<br><br><strong>Incident:</strong> 28-year-old Aiden Hale entered the Covenant School and killed 3 students and 3 staff members before being killed by police.`
+            },
+            {
+                name: "Cleveland Elementary",
+                x: 0.08, // Stockton, California
+                y: 0.60,
+                details: `<strong>Date:</strong> January 17, 1989<br><strong>Location:</strong> Stockton, California<br><strong>Casualties:</strong> 6 deceased (including shooter), 31 injured<br><br><strong>Incident:</strong> 24-year-old Patrick Purdy fatally shot five children and wounded 32 others before taking his own life.`
+            },
+            {
+                name: "Northern Illinois University",
+                x: 0.55, // DeKalb, Illinois
+                y: 0.38,
+                details: `<strong>Date:</strong> February 14, 2008<br><strong>Location:</strong> DeKalb, Illinois<br><strong>Casualties:</strong> 6 deceased (including shooter), 17 injured<br><br><strong>Incident:</strong> 27-year-old Steven Kazmierczak shot multiple people in a lecture hall before taking his own life.`
+            },
+            {
+                name: "Rancho Tehama Elementary",
+                x: 0.05, // Rancho Tehama, California
+                y: 0.50,
+                details: `<strong>Date:</strong> November 14, 2017<br><strong>Location:</strong> Rancho Tehama, California<br><strong>Casualties:</strong> 6 deceased (including shooter), 11 injured<br><br><strong>Incident:</strong> 43-year-old Kevin Neal injured one student at the elementary school and killed five adults at several locations.`
+            },
+            {
+                name: "Santa Monica College",
+                x: 0.10, // Santa Monica, California
+                y: 0.70,
+                details: `<strong>Date:</strong> June 7, 2013<br><strong>Location:</strong> Santa Monica, California<br><strong>Casualties:</strong> 6 deceased (including shooter), 2 injured<br><br><strong>Incident:</strong> 23-year-old John Zawahri began a killing spree at home before driving to Santa Monica College where he continued shooting.`
+            },
+            {
+                name: "Charleston High School",
+                x: 0.68, // Charleston, West Virginia
+                y: 0.55,
+                details: `<strong>Date:</strong> December 13, 1898<br><strong>Location:</strong> Charleston, West Virginia<br><strong>Casualties:</strong> 6 deceased, 1+ injured<br><br><strong>Incident:</strong> During a school exhibition, a fight broke out that resulted in multiple deaths including students and injuries to others.`
+            },
+            {
+                name: "University of Iowa",
+                x: 0.47, // Iowa City, Iowa
+                y: 0.38,
+                details: `<strong>Date:</strong> November 1, 1991<br><strong>Location:</strong> Iowa City, Iowa<br><strong>Casualties:</strong> 6 deceased (including shooter), 1 injured<br><br><strong>Incident:</strong> 28-year-old former graduate student Gang Lu killed four faculty members and a research student before shooting himself.`
+            },
+            {
+                name: "Westside Middle School",
+                x: 0.50, // Craighead County, Arkansas
+                y: 0.65,
+                details: `<strong>Date:</strong> March 24, 1998<br><strong>Location:</strong> Craighead County, Arkansas<br><strong>Casualties:</strong> 5 deceased, 10 injured<br><br><strong>Incident:</strong> 13-year-old Mitchell Johnson and 11-year-old Andrew Golden killed a teacher and four students during a fire alarm.`
+            },
+            {
+                name: "Rose-Mar College of Beauty",
+                x: 0.25, // Mesa, Arizona
+                y: 0.70,
+                details: `<strong>Date:</strong> November 12, 1966<br><strong>Location:</strong> Mesa, Arizona<br><strong>Casualties:</strong> 5 deceased, 2 injured<br><br><strong>Incident:</strong> 18-year-old Robert Smith took seven people hostage and shot each in the head, killing four women and a 3-year-old girl.`
+            },
+            {
+                name: "South Pasadena Schools",
+                x: 0.12, // South Pasadena, California
+                y: 0.71,
+                details: `<strong>Date:</strong> May 6, 1940<br><strong>Location:</strong> South Pasadena, California<br><strong>Casualties:</strong> 5 deceased, 2 injured<br><br><strong>Incident:</strong> 38-year-old Verlin Spencer shot and killed school administrators and teachers following his dismissal.`
+            },
+            {
+                name: "Marysville Pilchuck High",
+                x: 0.02, // Marysville, Washington
+                y: 0.20,
+                details: `<strong>Date:</strong> October 24, 2014<br><strong>Location:</strong> Marysville, Washington<br><strong>Casualties:</strong> 5 deceased (including shooter), 1 injured<br><br><strong>Incident:</strong> 15-year-old Jaylen Fryberg shot five students in the school cafeteria before committing suicide.`
+            },
+            {
+                name: "Thurston High School",
+                x: 0.04, // Springfield, Oregon
+                y: 0.28,
+                details: `<strong>Date:</strong> May 21, 1998<br><strong>Location:</strong> Springfield, Oregon<br><strong>Casualties:</strong> 4 deceased, 25 injured<br><br><strong>Incident:</strong> 15-year-old Kip Kinkel killed his parents at home, then drove to Thurston High School where he killed two students and wounded 25 others.`
+            },
+            {
+                name: "Lindhurst High School",
+                x: 0.08, // Olivehurst, California
+                y: 0.55,
+                details: `<strong>Date:</strong> May 1, 1992<br><strong>Location:</strong> Olivehurst, California<br><strong>Casualties:</strong> 4 deceased, 10 injured<br><br><strong>Incident:</strong> 20-year-old former student Eric Houston killed three students and one teacher before surrendering to police.`
+            },
+            {
+                name: "Kent State University",
+                x: 0.65, // Kent, Ohio
+                y: 0.40,
+                details: `<strong>Date:</strong> May 4, 1970<br><strong>Location:</strong> Kent, Ohio<br><strong>Casualties:</strong> 4 deceased, 9 injured<br><br><strong>Incident:</strong> During Vietnam War protests, National Guard soldiers opened fire on unarmed students, killing four people.`
+            },
+            {
+                name: "Olean High School",
+                x: 0.72, // Olean, New York
+                y: 0.35,
+                details: `<strong>Date:</strong> December 30, 1974<br><strong>Location:</strong> Olean, New York<br><strong>Casualties:</strong> 4 deceased, 7 injured<br><br><strong>Incident:</strong> 17-year-old Anthony Barbaro opened fire from the third floor, killing four people including an unborn baby.`
+            },
+            {
+                name: "Oxford High School",
+                x: 0.58, // Oxford, Michigan
+                y: 0.35,
+                details: `<strong>Date:</strong> November 30, 2021<br><strong>Location:</strong> Oxford, Michigan<br><strong>Casualties:</strong> 4 deceased, 7 injured<br><br><strong>Incident:</strong> 15-year-old student Ethan Crumbley opened fire at Oxford High School, killing four students and wounding seven others before being arrested.`
+            },
+            {
+                name: "Apalachee High School",
+                x: 0.72, // Winder, Georgia
+                y: 0.62,
+                details: `<strong>Date:</strong> September 4, 2024<br><strong>Location:</strong> Winder, Georgia<br><strong>Casualties:</strong> 4 deceased, 7 injured<br><br><strong>Incident:</strong> 14-year-old student Colt Gray opened fire at Apalachee High School, killing two teachers and two students while injuring seven others.`
+            },
+            {
+                name: "Michigan State University",
+                x: 0.58, // East Lansing, Michigan
+                y: 0.36,
+                details: `<strong>Date:</strong> February 13, 2023<br><strong>Location:</strong> East Lansing, Michigan<br><strong>Casualties:</strong> 4 deceased (including shooter), 5 injured<br><br><strong>Incident:</strong> A man shot several people on the Michigan State University campus, killing three and wounding five before killing himself.`
+            },
+            {
+                name: "University of Nevada Las Vegas",
+                x: 0.18, // Las Vegas, Nevada
+                y: 0.68,
+                details: `<strong>Date:</strong> December 6, 2023<br><strong>Location:</strong> Las Vegas, Nevada<br><strong>Casualties:</strong> 4 deceased (including shooter), 3 injured<br><br><strong>Incident:</strong> A shooter opened fire at UNLV, killing three faculty members and injuring three others before being killed by police.`
+            },
+            {
+                name: "Plain Dealing High School",
+                x: 0.43, // Plain Dealing, Louisiana
+                y: 0.75,
+                details: `<strong>Date:</strong> March 26, 1893<br><strong>Location:</strong> Plain Dealing, Louisiana<br><strong>Casualties:</strong> 4 deceased, 1 injured<br><br><strong>Incident:</strong> During an evening school dance, a fight broke out resulting in multiple deaths and injuries.`
+            },
+            {
+                name: "University of Arizona",
+                x: 0.22, // Tucson, Arizona
+                y: 0.73,
+                details: `<strong>Date:</strong> October 28, 2002<br><strong>Location:</strong> Tucson, Arizona<br><strong>Casualties:</strong> 4 deceased (including shooter), 0 injured<br><br><strong>Incident:</strong> 40-year-old nursing student Robert Flores killed three assistant professors before turning the gun on himself.`
+            }
+        ];
+
+        class InteractiveMap {
+            constructor() {
+                this.mapContainer = document.getElementById('mapContainer');
+                this.mapWrapper = document.getElementById('mapWrapper');
+                this.mapImage = document.getElementById('mapImage');
+                this.tooltip = document.getElementById('tooltip');
+                this.infoBox = document.getElementById('infoBox');
+                this.overlay = document.getElementById('overlay');
+                
+                this.isDragging = false;
+                this.startX = 0;
+                this.startY = 0;
+                this.currentX = 0;
+                this.currentY = 0;
+                this.scale = 1;
+                this.minScale = 0.5;
+                this.maxScale = 3;
+                
+                // Touch handling
+                this.initialDistance = 0;
+                this.initialScale = 1;
+                this.touches = {};
+                
+                this.crimePoints = [];
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.loadCrimeData();
+                
+                // Wait for image to load before setting up points
+                this.mapImage.onload = () => {
+                    this.createCrimePoints();
+                };
+                
+                // If image is already loaded
+                if (this.mapImage.complete) {
+                    this.createCrimePoints();
+                }
+            }
+            
+            setupEventListeners() {
+                // Mouse events for dragging
+                this.mapContainer.addEventListener('mousedown', (e) => this.startDrag(e));
+                document.addEventListener('mousemove', (e) => this.drag(e));
+                document.addEventListener('mouseup', () => this.endDrag());
+                
+                // Wheel event for trackpad pinch-to-zoom
+                this.mapContainer.addEventListener('wheel', (e) => this.handleWheel(e));
+                
+                // Touch events for mobile
+                this.mapContainer.addEventListener('touchstart', (e) => this.handleTouchStart(e));
+                this.mapContainer.addEventListener('touchmove', (e) => this.handleTouchMove(e));
+                this.mapContainer.addEventListener('touchend', (e) => this.handleTouchEnd(e));
+                
+                // Click to close info box
+                this.overlay.addEventListener('click', () => this.closeInfoBox());
+                this.overlay.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    this.closeInfoBox();
+                });
+                document.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('crime-point') && 
+                        !this.infoBox.contains(e.target)) {
+                        this.closeInfoBox();
+                    }
+                });
+                document.addEventListener('touchend', (e) => {
+                    if (!e.target.classList.contains('crime-point') && 
+                        !this.infoBox.contains(e.target)) {
+                        this.closeInfoBox();
+                    }
+                });
+                
+                // Prevent context menu
+                this.mapContainer.addEventListener('contextmenu', (e) => e.preventDefault());
+            }
+            
+            loadCrimeData() {
+                this.crimeData = massSchoolShootings;
+            }
+            
+            createCrimePoints() {
+                this.crimeData.forEach((crime, index) => {
+                    const point = document.createElement('div');
+                    point.className = 'crime-point';
+                    point.dataset.index = index;
+                    
+                    // Position relative to image
+                    point.style.left = (crime.x * 100) + '%';
+                    point.style.top = (crime.y * 100) + '%';
+                    
+                    // Event listeners
+                    point.addEventListener('mouseenter', (e) => this.showTooltip(e, crime));
+                    point.addEventListener('mouseleave', () => this.hideTooltip());
+                    point.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.showInfoBox(crime);
+                    });
+                    
+                    // Touch events for mobile
+                    point.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    });
+                    point.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.showInfoBox(crime);
+                    });
+                    
+                    this.mapWrapper.appendChild(point);
+                    this.crimePoints.push(point);
+                });
+            }
+            
+            startDrag(e) {
+                if (e.touches && e.touches.length > 1) return; // Don't drag if multi-touch
+                
+                this.isDragging = true;
+                this.startX = e.clientX - this.currentX;
+                this.startY = e.clientY - this.currentY;
+                this.mapContainer.style.cursor = 'grabbing';
+            }
+            
+            drag(e) {
+                if (!this.isDragging) return;
+                
+                e.preventDefault();
+                
+                const newX = e.clientX - this.startX;
+                const newY = e.clientY - this.startY;
+                
+                this.constrainAndSetPosition(newX, newY);
+            }
+            
+            endDrag() {
+                this.isDragging = false;
+                this.mapContainer.style.cursor = 'grab';
+            }
+            
+            handleWheel(e) {
+                e.preventDefault();
+                
+                // Detect trackpad pinch (ctrlKey is set on trackpad pinch)
+                if (e.ctrlKey) {
+                    const delta = -e.deltaY * 0.003; // Reduce sensitivity significantly
+                    const zoomFactor = delta > 0 ? 1 + delta : 1 / (1 - delta);
+                    this.zoom(zoomFactor, e);
+                } else {
+                    // Regular scroll - treat as pan
+                    const newX = this.currentX - e.deltaX;
+                    const newY = this.currentY - e.deltaY;
+                    this.constrainAndSetPosition(newX, newY);
+                }
+            }
+            
+            handleTouchStart(e) {
+                e.preventDefault();
+                
+                if (e.touches.length === 1) {
+                    // Single touch - start dragging
+                    const touch = e.touches[0];
+                    this.startDrag({
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    });
+                } else if (e.touches.length === 2) {
+                    // Two finger touch - prepare for pinch zoom
+                    this.isDragging = false;
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    
+                    this.initialDistance = this.getDistance(touch1, touch2);
+                    this.initialScale = this.scale;
+                    
+                    // Store center point for zoom
+                    this.touchCenterX = (touch1.clientX + touch2.clientX) / 2;
+                    this.touchCenterY = (touch1.clientY + touch2.clientY) / 2;
+                }
+            }
+            
+            handleTouchMove(e) {
+                e.preventDefault();
+                
+                if (e.touches.length === 1 && this.isDragging) {
+                    // Single touch drag
+                    const touch = e.touches[0];
+                    this.drag({
+                        preventDefault: () => {},
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    });
+                } else if (e.touches.length === 2) {
+                    // Two finger pinch zoom
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    
+                    const currentDistance = this.getDistance(touch1, touch2);
+                    const scaleChange = currentDistance / this.initialDistance;
+                    // Reduce touch zoom sensitivity significantly
+                    const scaleDelta = (scaleChange - 1) * 0.3; // Make touch zoom much less sensitive
+                    const newScale = Math.max(this.minScale, Math.min(this.maxScale, this.initialScale * (1 + scaleDelta)));
+                    
+                    if (newScale !== this.scale) {
+                        const centerX = (touch1.clientX + touch2.clientX) / 2;
+                        const centerY = (touch1.clientY + touch2.clientY) / 2;
+                        
+                        this.zoomToPoint(newScale, centerX, centerY);
+                    }
+                }
+            }
+            
+            handleTouchEnd(e) {
+                e.preventDefault();
+                
+                if (e.touches.length === 0) {
+                    this.endDrag();
+                } else if (e.touches.length === 1) {
+                    // Switched from two finger to one finger
+                    const touch = e.touches[0];
+                    this.startDrag({
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    });
+                }
+            }
+            
+            getDistance(touch1, touch2) {
+                const dx = touch1.clientX - touch2.clientX;
+                const dy = touch1.clientY - touch2.clientY;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+            
+            zoom(factor, e) {
+                const containerRect = this.mapContainer.getBoundingClientRect();
+                
+                // Use mouse/touch position if available, otherwise center
+                let pointX = e ? e.clientX - containerRect.left : containerRect.width / 2;
+                let pointY = e ? e.clientY - containerRect.top : containerRect.height / 2;
+                
+                // Reduce zoom sensitivity by limiting the factor range
+                const limitedFactor = Math.max(0.95, Math.min(1.05, factor));
+                const newScale = Math.max(this.minScale, Math.min(this.maxScale, this.scale * limitedFactor));
+                
+                if (newScale === this.scale) return;
+                
+                this.zoomToPoint(newScale, pointX, pointY);
+            }
+            
+            zoomToPoint(newScale, pointX, pointY) {
+                // Calculate zoom point relative to current transform
+                const zoomPointX = (pointX - this.currentX) / this.scale;
+                const zoomPointY = (pointY - this.currentY) / this.scale;
+                
+                // Update scale
+                this.scale = newScale;
+                
+                // Adjust position to keep zoom point under cursor/touch
+                const newX = pointX - (zoomPointX * this.scale);
+                const newY = pointY - (zoomPointY * this.scale);
+                
+                this.constrainAndSetPosition(newX, newY);
+            }
+            
+            constrainAndSetPosition(newX, newY) {
+                const containerRect = this.mapContainer.getBoundingClientRect();
+                const scaledWidth = this.mapImage.offsetWidth * this.scale;
+                const scaledHeight = this.mapImage.offsetHeight * this.scale;
+                
+                // Calculate boundaries
+                const maxX = 0;
+                const minX = containerRect.width - scaledWidth;
+                const maxY = 0;
+                const minY = containerRect.height - scaledHeight;
+                
+                // Constrain movement within boundaries
+                this.currentX = Math.max(minX, Math.min(maxX, newX));
+                this.currentY = Math.max(minY, Math.min(maxY, newY));
+                
+                this.updateTransform();
+            }
+            
+            updateTransform() {
+                this.mapWrapper.style.transform = 
+                    `translate(${this.currentX}px, ${this.currentY}px) scale(${this.scale})`;
+            }
+            
+            showTooltip(e, crime) {
+                this.tooltip.textContent = crime.name;
+                this.tooltip.style.display = 'block';
+                this.tooltip.style.left = e.pageX + 10 + 'px';
+                this.tooltip.style.top = e.pageY - 30 + 'px';
+            }
+            
+            hideTooltip() {
+                this.tooltip.style.display = 'none';
+            }
+            
+            showInfoBox(crime) {
+                document.getElementById('schoolName').textContent = crime.name;
+                document.getElementById('incidentDetails').innerHTML = `<p>${crime.details}</p>`;
+                this.overlay.style.display = 'block';
+                this.infoBox.style.display = 'block';
+            }
+            
+            closeInfoBox() {
+                this.overlay.style.display = 'none';
+                this.infoBox.style.display = 'none';
+            }
+        }
+        
+        // Initialize the map when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new InteractiveMap();
+        });
+    </script>
+</body>
+</html>
